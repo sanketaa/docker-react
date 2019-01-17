@@ -1,0 +1,9 @@
+# sanket jadhav
+
+sudo: required
+services: 
+  - docker
+before_install:
+  - docker build -t sanketjadhav/docker-react -f Dockerfile.dev .
+script:  
+  - docker run sanketjadhav/docker-react npm run test -- --coverage
