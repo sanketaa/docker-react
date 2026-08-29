@@ -1,68 +1,139 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Dockerized React CI/CD Lab
 
-## Available Scripts
+A frontend DevOps learning project that demonstrates how to develop, test, containerize, and serve a React application with Docker, Docker Compose, Nginx, and Travis CI.
 
-In the project directory, you can run:
+## Background
 
-### `npm start`
+The application itself is intentionally small: a Create React App starter interface with a basic render test. The main focus of the repository is the delivery workflow surrounding the frontend application.
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The project explores two container strategies:
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+- A development container that runs the React development server with live source mounting
+- A multi-stage production image that builds static assets with Node.js and serves them through Nginx
 
-### `npm test`
+A Travis CI configuration builds the development image and runs the React test suite inside a container.
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+This is a historical educational lab. Its React, Node.js, build-tool, CI, and container-image versions should be updated before reuse.
 
-### `npm run build`
+## Development Workflow
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+`Dockerfile.dev` creates the development environment:
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+1. Start from a Node.js Alpine image.
+2. Set `/app` as the working directory.
+3. Install dependencies from `package.json`.
+4. Copy the application source.
+5. Start the React development server.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+`docker-compose.yml` exposes port `3000` and mounts the local source directory into the container. A separate anonymous volume preserves the container's `node_modules` directory.
 
-### `npm run eject`
+## Production Build
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+The production `Dockerfile` uses a multi-stage build:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. A Node.js builder stage installs dependencies and runs `npm run build`.
+2. The generated static files are copied into an Nginx image.
+3. Nginx serves the optimized frontend assets.
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+This pattern keeps build dependencies out of the final runtime image.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Continuous Integration
 
-## Learn More
+The historical `.travis.yml` workflow:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Enables Docker in the CI environment.
+2. Builds the development image.
+3. Runs the React test suite inside the built container.
+4. Requests coverage output from the test command.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Technologies
 
-### Code Splitting
+- JavaScript
+- React
+- Create React App
+- Docker
+- Docker Compose
+- Nginx
+- Travis CI
+- Node.js and npm
+- Git
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+## Repository Structure
 
-### Analyzing the Bundle Size
+```text
+.
+├── .travis.yml
+├── Dockerfile
+├── Dockerfile.dev
+├── docker-compose.yml
+├── package.json
+├── package-lock.json
+├── public
+└── src
+    ├── App.js
+    ├── App.test.js
+    ├── index.js
+    └── serviceWorker.js
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+## Skills Demonstrated
 
-### Making a Progressive Web App
+- Containerizing a frontend development environment
+- Using bind mounts and container volumes for local development
+- Creating a multi-stage production image
+- Separating build-time and runtime dependencies
+- Serving static frontend assets with Nginx
+- Running automated tests inside a container
+- Defining a container-based CI workflow
+- Maintaining reproducible dependencies with a lockfile
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+## Run Locally
 
-### Advanced Configuration
+The committed dependencies are historical, so review and update them before running on a modern workstation.
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+Using npm:
 
-### Deployment
+```bash
+npm install
+npm test
+npm start
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+Using Docker Compose:
 
-### `npm run build` fails to minify
+```bash
+docker compose up --build
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+The development application is exposed at:
+
+```text
+http://localhost:3000
+```
+
+Build the production image:
+
+```bash
+docker build -t docker-react .
+docker run --rm -p 8080:80 docker-react
+```
+
+Then open `http://localhost:8080`.
+
+## Security and Modernization Notes
+
+Do not treat the historical configuration as production-ready.
+
+- Update React, React DOM, React Scripts, Node.js, and transitive dependencies.
+- Pin specific base-image versions instead of relying on mutable tags.
+- Run current dependency and container vulnerability scans.
+- Replace the retired Travis CI configuration or update it to current syntax.
+- Add a dedicated Nginx configuration with security headers and caching rules.
+- Run the Nginx container with an appropriate non-root configuration.
+- Expand the single starter test into meaningful component and integration tests.
+- Add linting, build verification, image scanning, and deployment controls.
+- Use `npm ci` in automated builds for lockfile-based dependency installation.
+
+## Portfolio Context
+
+This project demonstrates practical understanding of frontend containerization, multi-stage Docker builds, development-versus-production environments, Nginx static hosting, and container-based continuous integration. It is presented as a transparent learning project rather than a production application.
